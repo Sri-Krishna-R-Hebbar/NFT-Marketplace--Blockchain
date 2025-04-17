@@ -3,19 +3,33 @@ import React, { useState, useEffect } from 'react';
 import NFTGrid from '@/components/NFTGrid';
 import { NFT } from '@/components/NFTCard';
 import { useToast } from '@/components/ui/use-toast';
-import { fetchMyNFTs } from '@/utils/nftUtils';
+import { fetchMyNFTs, getCurrentWalletAddress } from '@/utils/nftUtils';
 
 const MyNFTs = () => {
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
+  const [walletAddress, setWalletAddress] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
+    const initWallet = async () => {
+      const address = await getCurrentWalletAddress();
+      setWalletAddress(address);
+    };
+    
+    initWallet();
+  }, []);
+
+  useEffect(() => {
     const loadMyNFTs = async () => {
+      if (!walletAddress) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
-        // In a real app, we would pass the current wallet address
-        const myNFTs = await fetchMyNFTs('0x1234...'); // Dummy address
+        const myNFTs = await fetchMyNFTs(walletAddress);
         setNfts(myNFTs);
       } catch (error) {
         console.error("Failed to load NFTs:", error);
@@ -30,7 +44,21 @@ const MyNFTs = () => {
     };
 
     loadMyNFTs();
-  }, [toast]);
+  }, [walletAddress, toast]);
+
+  if (!walletAddress) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8 text-center">
+          <span className="text-nft-primary">My</span> NFTs
+        </h1>
+        <div className="flex flex-col items-center justify-center py-20">
+          <p className="text-xl text-nft-muted mb-4">Please connect your wallet to view your NFTs</p>
+          <p className="text-sm text-nft-muted">Click on "Connect Wallet" in the navigation bar</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

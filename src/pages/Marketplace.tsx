@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import NFTGrid from '@/components/NFTGrid';
 import { NFT } from '@/components/NFTCard';
 import { useToast } from '@/components/ui/use-toast';
-import { fetchAvailableNFTs, buyNFT } from '@/utils/nftUtils';
+import { fetchAvailableNFTs, buyNFT, getCurrentWalletAddress } from '@/utils/nftUtils';
 
 const Marketplace = () => {
   const [nfts, setNfts] = useState<NFT[]>([]);
@@ -33,8 +33,19 @@ const Marketplace = () => {
 
   const handleBuyNFT = async (id: string) => {
     try {
+      const address = await getCurrentWalletAddress();
+      
+      if (!address) {
+        toast({
+          title: "Wallet not connected",
+          description: "Please connect your wallet to buy NFTs",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // In a real app, this would connect to the blockchain
-      await buyNFT(id);
+      await buyNFT(id, address);
       
       // Update the local state to reflect the purchase
       setNfts(prevNfts => prevNfts.filter(nft => nft.id !== id));

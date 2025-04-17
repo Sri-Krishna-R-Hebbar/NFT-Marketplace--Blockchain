@@ -3,47 +3,15 @@ import { NFT } from '@/components/NFTCard';
 import { ethers } from 'ethers';
 
 // In a real application, we would connect to a smart contract
-// For this demo, we'll use mock data and localStorage to simulate persistence
+// For this demo, we'll use localStorage to simulate persistence
 
-// Sample NFT data
-const sampleNFTs: NFT[] = [
-  {
-    id: '1',
-    name: 'Cosmic Voyager',
-    description: 'A journey through the stars and beyond the limits of human imagination.',
-    image: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80',
-    price: ethers.utils.parseEther('0.05').toString(),
-    available: true,
-    owner: '',
-  },
-  {
-    id: '2',
-    name: 'Digital Dreamscape',
-    description: 'A surreal landscape created from digital fragments of consciousness.',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1064&q=80',
-    price: ethers.utils.parseEther('0.08').toString(),
-    available: true,
-    owner: '',
-  },
-  {
-    id: '3',
-    name: 'Pixel Panther',
-    description: 'A fierce digital predator, stalking through the blockchain jungle.',
-    image: 'https://images.unsplash.com/photo-1508808703878-f28e5c419319?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1089&q=80',
-    price: ethers.utils.parseEther('0.1').toString(),
-    available: true,
-    owner: '',
-  },
-];
-
-// In a real app, we'd use a real backend service to store and retrieve data
-// For this demo, we'll use localStorage to persist data between sessions
+// Storage key for the NFT data
 const STORAGE_KEY = 'nft_marketplace_data';
 
-// Initialize localStorage with sample data if it doesn't exist
+// Initialize localStorage with empty array if it doesn't exist
 const initializeStorage = () => {
   if (!localStorage.getItem(STORAGE_KEY)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleNFTs));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
   }
 };
 
@@ -73,12 +41,20 @@ export const fetchMyNFTs = async (address: string): Promise<NFT[]> => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
+  if (!address) {
+    return [];
+  }
+  
   const nfts = getAllNFTs();
   return nfts.filter(nft => nft.owner.toLowerCase() === address.toLowerCase());
 };
 
 // Buy an NFT
-export const buyNFT = async (id: string): Promise<void> => {
+export const buyNFT = async (id: string, buyerAddress: string): Promise<void> => {
+  if (!buyerAddress) {
+    throw new Error('Wallet not connected');
+  }
+  
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1500));
   
@@ -88,7 +64,7 @@ export const buyNFT = async (id: string): Promise<void> => {
       return {
         ...nft,
         available: false,
-        owner: '0x1234...', // This would be the buyer's address in a real app
+        owner: buyerAddress,
       };
     }
     return nft;
@@ -125,6 +101,21 @@ export const mintNFT = async (params: MintNFTParams): Promise<void> => {
   saveNFTs([...nfts, newNFT]);
 };
 
-// Note: In a real application, these functions would interact with a smart contract
-// and possibly a backend service for data storage and retrieval from an actual CSV file
-// or database. This is a simplified version for demonstration purposes.
+// Get current connected wallet address
+export const getCurrentWalletAddress = async (): Promise<string> => {
+  const { ethereum } = window as any;
+  if (!ethereum) {
+    return '';
+  }
+  
+  try {
+    const accounts = await ethereum.request({ method: 'eth_accounts' });
+    if (accounts.length > 0) {
+      return accounts[0];
+    }
+    return '';
+  } catch (error) {
+    console.error('Error getting wallet address:', error);
+    return '';
+  }
+};

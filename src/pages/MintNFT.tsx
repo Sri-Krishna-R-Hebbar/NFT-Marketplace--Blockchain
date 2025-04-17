@@ -62,8 +62,13 @@ const MintNFT = () => {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      // In a real app, this would connect to the blockchain
-      await mintNFT(values);
+      // Ensure all required fields are present
+      await mintNFT({
+        name: values.name,
+        description: values.description,
+        image: values.image,
+        price: values.price
+      });
       
       toast({
         title: "NFT Created!",

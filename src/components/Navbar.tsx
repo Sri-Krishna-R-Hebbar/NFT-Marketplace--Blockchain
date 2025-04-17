@@ -1,16 +1,75 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Wallet, Plus, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const Navbar = () => {
-  // In a real app, we would check if wallet is connected
-  const [walletConnected, setWalletConnected] = React.useState(false);
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+  const { toast } = useToast();
 
-  const connectWallet = () => {
-    // This would connect to the actual wallet in a real implementation
-    setWalletConnected(true);
+  useEffect(() => {
+    // Check if MetaMask is already connected
+    checkIfWalletIsConnected();
+  }, []);
+
+  const checkIfWalletIsConnected = async () => {
+    try {
+      const { ethereum } = window as any;
+      if (!ethereum) {
+        return;
+      }
+
+      // Check if we're authorized to access the user's wallet
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+      
+      if (accounts.length !== 0) {
+        setWalletConnected(true);
+        setWalletAddress(accounts[0]);
+      }
+    } catch (error) {
+      console.error('Error checking if wallet is connected:', error);
+    }
+  };
+
+  const connectWallet = async () => {
+    try {
+      const { ethereum } = window as any;
+      if (!ethereum) {
+        toast({
+          title: "MetaMask not installed",
+          description: "Please install MetaMask to use this feature",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Request account access
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      
+      setWalletConnected(true);
+      setWalletAddress(accounts[0]);
+      
+      toast({
+        title: "Wallet connected",
+        description: "Your wallet has been successfully connected!",
+      });
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+      toast({
+        title: "Connection failed",
+        description: "Failed to connect wallet. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Format address for display (0x1234...5678)
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
   return (
@@ -42,7 +101,7 @@ const Navbar = () => {
           onClick={connectWallet}
         >
           <Wallet className="w-4 h-4" />
-          <span>{walletConnected ? '0x1a2...3b4c' : 'Connect Wallet'}</span>
+          <span>{walletConnected ? formatAddress(walletAddress) : 'Connect Wallet'}</span>
         </Button>
       </div>
     </nav>
