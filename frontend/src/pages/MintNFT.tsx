@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { MintNFTParams, mintNFT, getCurrentWalletAddress } from '@/utils/nftUtils';
+import { getCurrentWalletAddress } from '@/utils/nftUtils';
+import { mintNFTOnContract } from '@/utils/contractUtils';
 
 const MintNFT = () => {
   const [name, setName] = useState('');
@@ -66,18 +67,12 @@ const MintNFT = () => {
     try {
       setIsSubmitting(true);
       
-      const nftParams: MintNFTParams = {
-        name,
-        description,
-        image,
-        price,
-      };
-      
-      await mintNFT(nftParams, walletAddress);
+      // Call contract to mint NFT
+      const txHash = await mintNFTOnContract(name, description, image, price);
       
       toast({
         title: "Success!",
-        description: "Your NFT has been minted successfully!",
+        description: `Your NFT has been minted successfully! Transaction hash: ${txHash.substring(0, 10)}...`,
       });
       
       // Redirect to marketplace
