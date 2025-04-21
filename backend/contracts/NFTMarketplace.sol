@@ -28,7 +28,7 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         bool sold
     );
     
-    constructor() ERC721("NFT Marketplace", "NFTM") Ownable(msg.sender) {}
+    constructor() ERC721("NFT Marketplace", "NFTM") {}
     
     function createNFTItem(string memory tokenURI, uint256 price) public returns (uint256) {
         _tokenIds.increment();

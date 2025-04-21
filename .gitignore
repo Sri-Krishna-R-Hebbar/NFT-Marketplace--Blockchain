@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+package-lock.json
+./package-lock.json
+
+.env
+artifacts
+cache
